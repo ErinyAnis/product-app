@@ -7,7 +7,7 @@ export function useProducts(page: number, limit: number = 12, search: string = "
     queryKey: ["products", page, search, category],
     queryFn: () => {
       const skip = (page - 1) * limit;
-      return getProducts(limit, skip);
+      return getProducts(limit, skip, search, category);
     },
     placeholderData: (prev) => prev,
   });

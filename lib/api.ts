@@ -8,10 +8,28 @@ import {
 
 const BASE_URL = "https://dummyjson.com";
 
-export async function getProducts(limit: number, skip: number): Promise<ProductsResponse> {
-  const res = await fetch(
-    `https://dummyjson.com/products?limit=${limit}&skip=${skip}`
-  );
+export async function getProducts(
+  limit: number,
+  skip: number,
+  search: string = "",
+  category: string = ""
+): Promise<ProductsResponse> {
+  const params = new URLSearchParams({
+    limit: String(limit),
+    skip: String(skip),
+  });
+
+  let url: string;
+  if (category) {
+    url = `${BASE_URL}/products/category/${encodeURIComponent(category)}?${params}`;
+  } else if (search) {
+    params.set("q", search);
+    url = `${BASE_URL}/products/search?${params}`;
+  } else {
+    url = `${BASE_URL}/products?${params}`;
+  }
+
+  const res = await fetch(url);
 
   if (!res.ok) throw new Error("Failed to fetch products");
 

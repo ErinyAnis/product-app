@@ -5,10 +5,10 @@ import ProductGrid from "@/components/products/ProductGrid";
 import ProductSkeleton from "@/components/products/ProductSkeleton";
 import EmptyState from "@/components/products/EmptyState";
 import { useCategories } from "@/hooks/useCategories";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 import { Product } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
-import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function HomePage() {
   const searchParams = useSearchParams();
@@ -30,20 +30,14 @@ export default function HomePage() {
     router.push(`/?${params.toString()}`);
   };
 
-  const { data, error } = useProducts(page);
+  const { data, error } = useProducts(page, 12, search, category);
 
   const products = data?.products ?? [];
   const total = data?.total ?? 0;
 
   const { data: categories = [], isLoading } = useCategories();
 
-  const filteredProducts = products.filter((product: Product) => {
-    const matchesSearch = product.title
-      .toLowerCase()
-      .includes(search.toLowerCase());
-    const matchesCategory = category ? product.category === category : true;
-    return matchesSearch && matchesCategory;
-  });
+  const filteredProducts = products;
 
   const totalPages =
     search || category
@@ -51,7 +45,7 @@ export default function HomePage() {
       : Math.ceil(total / 12);
 
   return (
-   <ProtectedRoute>
+    <ProtectedRoute>
       <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
