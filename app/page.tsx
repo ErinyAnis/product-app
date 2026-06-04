@@ -8,6 +8,7 @@ import { useCategories } from "@/hooks/useCategories";
 import { Product } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import ProtectedRoute from "@/components/auth/ProtectedRoute";
 
 export default function HomePage() {
   const searchParams = useSearchParams();
@@ -50,7 +51,7 @@ export default function HomePage() {
       : Math.ceil(total / 12);
 
   return (
-    <>
+   <ProtectedRoute>
       <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
         {/* Filters */}
         <div className="flex flex-col sm:flex-row gap-3 mb-6">
@@ -164,6 +165,6 @@ export default function HomePage() {
           </button>
         </div>
       )}
-    </>
+    </ProtectedRoute>
   );
 }
