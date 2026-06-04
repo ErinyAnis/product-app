@@ -6,9 +6,8 @@ import ProductSkeleton from "@/components/products/ProductSkeleton";
 import EmptyState from "@/components/products/EmptyState";
 import { useCategories } from "@/hooks/useCategories";
 import ProtectedRoute from "@/components/auth/ProtectedRoute";
-import { Product } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, ChevronLeft, ChevronRight } from "lucide-react";
+import { Search, ChevronLeft, ChevronRight, X } from "lucide-react";
 
 export default function HomePage() {
   const searchParams = useSearchParams();
@@ -18,8 +17,10 @@ export default function HomePage() {
   const category = searchParams.get("category") || "";
   const search = searchParams.get("search") || "";
 
+  // Sync filters and pagination with URL query params
   const updateMultipleParams = (updates: Record<string, string>) => {
     const params = new URLSearchParams(searchParams.toString());
+
     Object.entries(updates).forEach(([key, value]) => {
       if (value) {
         params.set(key, value);
@@ -27,22 +28,51 @@ export default function HomePage() {
         params.delete(key);
       }
     });
+
     router.push(`/?${params.toString()}`);
   };
 
-  const { data, error } = useProducts(page, 12, search, category);
+  // Products are fetched based on current page and active filters
+  const {
+    data,
+    error,
+    isLoading: productsLoading,
+  } = useProducts(page, 12, search, category);
+
+  const { data: categories = [], isLoading: categoriesLoading } =
+    useCategories();
+
+  const isLoading = productsLoading || categoriesLoading;
 
   const products = data?.products ?? [];
   const total = data?.total ?? 0;
 
-  const { data: categories = [], isLoading } = useCategories();
+  // Pagination is calculated from API total count
+  const totalPages = Math.ceil(total / 12);
 
-  const filteredProducts = products;
+  if (isLoading) {
+    return (
+      <ProtectedRoute>
+        <div className="max-w-6xl mx-auto px-4 py-6 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <ProductSkeleton key={i} />
+            ))}
+          </div>
+        </div>
+      </ProtectedRoute>
+    );
+  }
 
-  const totalPages =
-    search || category
-      ? Math.ceil(filteredProducts.length / 12)
-      : Math.ceil(total / 12);
+  if (error) {
+    return (
+      <ProtectedRoute>
+        <p className="text-red-500 text-center py-10">
+          Failed to load products
+        </p>
+      </ProtectedRoute>
+    );
+  }
 
   return (
     <ProtectedRoute>
@@ -57,21 +87,43 @@ export default function HomePage() {
               placeholder="Search products..."
               value={search}
               onChange={(e) =>
-                updateMultipleParams({ search: e.target.value, page: "1" })
+                updateMultipleParams({
+                  search: e.target.value,
+                  page: "1",
+                })
               }
-              className="w-full border border-gray-300 rounded-lg pl-9 pr-4 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
+              className="w-full border border-gray-300 rounded-lg pl-9 pr-10 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition"
             />
-          </div>
 
+            {search && (
+              <button
+                type="button"
+                onClick={() =>
+                  updateMultipleParams({
+                    search: "",
+                    page: "1",
+                  })
+                }
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 cursor-pointer"
+                aria-label="Clear search"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+          </div>
           {/* Category */}
           <select
             value={category}
             onChange={(e) =>
-              updateMultipleParams({ category: e.target.value, page: "1" })
+              updateMultipleParams({
+                category: e.target.value,
+                page: "1",
+              })
             }
             className="border border-gray-300 rounded-lg px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 transition sm:w-48 bg-white"
           >
             <option value="">All Categories</option>
+
             {categories.map((categoryItem) => (
               <option key={categoryItem.slug} value={categoryItem.slug}>
                 {categoryItem.name}
@@ -80,64 +132,52 @@ export default function HomePage() {
           </select>
         </div>
 
-        {/* Skeletons */}
-        {isLoading && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-            {Array.from({ length: 6 }).map((_, i) => (
-              <ProductSkeleton key={i} />
-            ))}
-          </div>
-        )}
-
-        {error && (
-          <p className="text-red-500 text-center py-10">
-            Failed to load products
-          </p>
-        )}
-
         {/* Products */}
-        {!isLoading &&
-          !error &&
-          (filteredProducts.length > 0 ? (
-            <ProductGrid products={filteredProducts} />
-          ) : (
-            <>
-              <EmptyState
-                title="No matching products"
-                description={
-                  search && category
-                    ? `No products found for "${search}" in "${category}".`
-                    : search
-                      ? `No products match "${search}".`
-                      : category
-                        ? `No products found in "${category}".`
-                        : "No products available."
+        {products.length > 0 ? (
+          <ProductGrid products={products} />
+        ) : (
+          <>
+            <EmptyState
+              title="No matching products"
+              description={
+                search && category
+                  ? `No products found for "${search}" in "${category}".`
+                  : search
+                    ? `No products match "${search}".`
+                    : category
+                      ? `No products found in "${category}".`
+                      : "No products available."
+              }
+            />
+
+            <div className="flex justify-center">
+              <button
+                onClick={() =>
+                  updateMultipleParams({
+                    search: "",
+                    category: "",
+                    page: "1",
+                  })
                 }
-              />
-              <div className="flex justify-center">
-                <button
-                  onClick={() =>
-                    updateMultipleParams({
-                      search: "",
-                      category: "",
-                      page: "1",
-                    })
-                  }
-                  className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition text-sm"
-                >
-                  Clear Filters
-                </button>
-              </div>
-            </>
-          ))}
+                className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-lg cursor-pointer hover:bg-blue-700 transition text-sm"
+              >
+                Clear Filters
+              </button>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Pagination */}
-      {!isLoading && !error && totalPages > 1 && (
+      {/* Persist pagination state in URL so navigation keeps the current page */}
+      {totalPages > 1 && (
         <div className="flex justify-center items-center gap-3 mt-6 mb-10">
           <button
             disabled={page === 1}
-            onClick={() => updateMultipleParams({ page: String(page - 1) })}
+            onClick={() =>
+              updateMultipleParams({
+                page: String(page - 1),
+              })
+            }
             className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-gray-200 transition cursor-pointer disabled:cursor-not-allowed"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -151,7 +191,11 @@ export default function HomePage() {
 
           <button
             disabled={page === totalPages}
-            onClick={() => updateMultipleParams({ page: String(page + 1) })}
+            onClick={() =>
+              updateMultipleParams({
+                page: String(page + 1),
+              })
+            }
             className="flex items-center gap-1 px-3 py-1.5 bg-gray-100 rounded-lg text-sm font-medium disabled:opacity-40 hover:bg-gray-200 transition cursor-pointer disabled:cursor-not-allowed"
           >
             Next

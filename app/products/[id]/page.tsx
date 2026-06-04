@@ -81,6 +81,7 @@ export default function ProductDetailsPage() {
             <div className="flex items-center gap-2">
               <div className="flex">
                 {Array.from({ length: 5 }).map((_, i) => {
+                  // Supports partially filled stars for decimal ratings
                   const fillPercentage = Math.max(0, Math.min(1, rating - i));
                   return (
                     <div key={i} className="relative w-4 h-4">

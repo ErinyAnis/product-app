@@ -21,6 +21,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [isLoaded, setIsLoaded] = useState(false);
 
+  // Restore persisted user session after page refresh
   useEffect(() => {
     let isMounted = true;
 
@@ -56,6 +57,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         image: response.image,
       };
 
+      // Save authenticated user and token for session persistence
       localStorage.setItem("token", response.token);
       localStorage.setItem("user", JSON.stringify(user));
       setUser(user);
@@ -71,6 +73,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null);
   };
 
+  // Authentication state becomes valid only after initial session check
   const isAuthenticated = isLoaded && !!user;
 
   return (
