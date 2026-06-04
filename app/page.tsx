@@ -3,6 +3,7 @@
 import { useProducts } from "@/hooks/useProducts";
 import ProductGrid from "@/components/products/ProductGrid";
 import ProductSkeleton from "@/components/products/ProductSkeleton";
+import EmptyState from "@/components/products/EmptyState";
 import { useCategories } from "@/hooks/useCategories";
 import { Product } from "@/types";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -106,6 +107,18 @@ export default function HomePage() {
             <ProductGrid products={filteredProducts} />
           ) : (
             <>
+              <EmptyState
+                title="No matching products"
+                description={
+                  search && category
+                    ? `No products found for "${search}" in "${category}".`
+                    : search
+                      ? `No products match "${search}".`
+                      : category
+                        ? `No products found in "${category}".`
+                        : "No products available."
+                }
+              />
               <div className="flex justify-center">
                 <button
                   onClick={() =>
