@@ -36,7 +36,7 @@ export default function ProductDetailsPage() {
       </button>
 
       <div className="grid md:grid-cols-2 gap-6 sm:gap-10 bg-white p-5 sm:p-8 rounded-2xl shadow">
-        <div className="flex items-center justify-center bg-gray-50 rounded-xl p-6 min-h-[220px]">
+        <div className="flex items-center justify-center bg-gray-50 rounded-xl p-6 min-h-55">
           <Image
             src={imageSrc}
             alt={product.title}
