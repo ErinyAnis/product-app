@@ -20,6 +20,8 @@ export async function getProducts(
   });
 
   let url: string;
+  // DummyJSON does not support category + search together,
+  // so we fetch all products in the category and filter locally.
   if (category && search) {
     url = `${BASE_URL}/products/category/${encodeURIComponent(category)}?limit=0`;
   } else if (category) {
@@ -36,6 +38,7 @@ export async function getProducts(
 
   let result: ProductsResponse = await res.json();
 
+  // Apply search filtering client-side when both category and search are active.
   if (category && search) {
     const filtered = result.products.filter((p) =>
       p.title.toLowerCase().includes(search.toLowerCase())
