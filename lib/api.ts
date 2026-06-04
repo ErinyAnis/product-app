@@ -20,7 +20,9 @@ export async function getProducts(
   });
 
   let url: string;
-  if (category) {
+  if (category && search) {
+    url = `${BASE_URL}/products/category/${encodeURIComponent(category)}?limit=0`;
+  } else if (category) {
     url = `${BASE_URL}/products/category/${encodeURIComponent(category)}?${params}`;
   } else if (search) {
     params.set("q", search);
@@ -30,10 +32,23 @@ export async function getProducts(
   }
 
   const res = await fetch(url);
-
   if (!res.ok) throw new Error("Failed to fetch products");
 
-  return res.json();
+  let result: ProductsResponse = await res.json();
+
+  if (category && search) {
+    const filtered = result.products.filter((p) =>
+      p.title.toLowerCase().includes(search.toLowerCase())
+    );
+    result = {
+      products: filtered.slice(skip, skip + limit),
+      total: filtered.length,
+      skip,
+      limit,
+    };
+  }
+
+  return result;
 }
 
 export async function getProductById(id: number): Promise<Product> {
