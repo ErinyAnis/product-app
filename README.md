@@ -85,3 +85,4 @@ The application uses React Query for server-state management and caching.
 ## Demo
 
 Vercel Link
+https://product-app-six-theta.vercel.app/
